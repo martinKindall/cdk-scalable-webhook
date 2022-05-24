@@ -1,4 +1,4 @@
-import { Duration, Stack, StackProps, CfnRefElement } from 'aws-cdk-lib';
+import { Duration, Stack, StackProps } from 'aws-cdk-lib';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as apigatewayv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -45,6 +45,16 @@ export class ScalableEndpointStack extends Stack {
       apiId: httpApi.ref,
       routeKey: 'POST /send',
       target: 'integrations/' + sqsIntegration.ref
+    });
+
+    const stage = new apigatewayv2.CfnStage(this, 'DevStage', {
+      stageName: 'dev',
+      apiId: httpApi.ref
+    });
+
+    const deployment = new apigatewayv2.CfnDeployment(this, 'ApiDeployment', {
+      stageName: stage.stageName,
+      apiId: httpApi.ref
     });
   }
 }
