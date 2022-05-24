@@ -29,7 +29,7 @@ export class ScalableEndpointStack extends Stack {
       protocolType: 'HTTP'
     });
 
-    new apigatewayv2.CfnIntegration(this, "SqsIntegration", {
+    const sqsIntegration = new apigatewayv2.CfnIntegration(this, "SqsIntegration", {
       apiId: httpApi.ref,
       integrationSubtype: 'SQS-SendMessage',
       integrationType: 'AWS_PROXY',
@@ -39,6 +39,12 @@ export class ScalableEndpointStack extends Stack {
         QueueUrl: queue.queueUrl,
         MessageBody: "$request.body.message"
       }
+    });
+
+    new apigatewayv2.CfnRoute(this, "Route", {
+      apiId: httpApi.ref,
+      routeKey: 'POST /send',
+      target: 'integrations/' + sqsIntegration.ref
     });
   }
 }
