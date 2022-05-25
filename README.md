@@ -1,9 +1,28 @@
-# Welcome to your CDK TypeScript project
+# CDK Patterns - The Scalable Webhook
 
-You should explore the contents of this project. It demonstrates a CDK app with an instance of a stack (`ScalableEndpointStack`)
-which contains an Amazon SQS queue that is subscribed to an Amazon SNS topic.
+The original project https://github.com/cdk-patterns/serverless.
+This is just a rewrite of this pattern using CDK 2.X.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## Deploy
+
+```bash
+npm run build
+cdk deploy
+```
+
+## Usage
+
+Send a POST request to the __\/send__ endpoint of the created API Gateway, with a body like this:
+
+```json
+{
+    "message": {
+        "data": "Hello from CDK patterns"
+    }
+}
+```
+
+Verify in Cloudwatch logs that the lambda properly processes the message and check that the entry is written in DynamoDB.
 
 ## Useful commands
 
