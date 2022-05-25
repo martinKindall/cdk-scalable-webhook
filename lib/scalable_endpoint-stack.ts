@@ -2,7 +2,10 @@ import { Duration, Stack, StackProps } from 'aws-cdk-lib';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as apigatewayv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { Construct } from 'constructs';
+import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 
 export class ScalableEndpointStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -56,5 +59,29 @@ export class ScalableEndpointStack extends Stack {
       stageName: stage.stageName,
       apiId: httpApi.ref
     });
+
+    const table = new dynamodb.Table(this, 'MyTable', {
+      readCapacity: 1,
+      writeCapacity: 1,
+      partitionKey: {
+        name: 'id',
+        type: dynamodb.AttributeType.STRING
+      }
+    });
+
+    const sqsSubscribeLambda = new lambda.Function(this, 'SubscribeLambda', {
+      runtime: lambda.Runtime.NODEJS_12_X,
+      code: lambda.Code.fromAsset('lambda'),
+      handler: 'subscriber.handler',
+      reservedConcurrentExecutions: 2,
+      environment: {
+        queueURL: queue.queueUrl,
+        tableName: table.tableName
+      }
+    });
+
+    queue.grantConsumeMessages(sqsSubscribeLambda);
+    sqsSubscribeLambda.addEventSource(new SqsEventSource(queue, {}));
+    table.grantReadWriteData(sqsSubscribeLambda);
   }
 }
